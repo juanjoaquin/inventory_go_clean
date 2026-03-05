@@ -18,8 +18,9 @@ package main
 import (
 	"context"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/juanjoaquin/inventory_go_clean/database"
+	"github.com/juanjoaquin/inventory_go_clean/internal/repository"
+	"github.com/juanjoaquin/inventory_go_clean/internal/service"
 	"github.com/juanjoaquin/inventory_go_clean/settings"
 	"go.uber.org/fx"
 )
@@ -32,12 +33,23 @@ func main() {
 			context.Background,
 			settings.New,
 			database.New,
+			repository.New,
+			service.New,
 		), // Pasamos las funciones que devuelven un struct
 		fx.Invoke(
-			func(db *sqlx.DB) {
-				_, err := db.Query("SELECT * FROM USERS")
+			func(ctx context.Context, serv service.Service) {
+				err := serv.RegisterUser(ctx, "my@email.com", "myname", "mypassword")
 				if err != nil {
 					panic(err)
+				}
+
+				user, err := serv.LoginUser(ctx, "my@email.com", "mypassword")
+				if err != nil {
+					panic(err)
+				}
+
+				if user.Name != "myname" {
+					panic("user name does not match")
 				}
 			},
 		),
