@@ -36,23 +36,7 @@ func main() {
 			repository.New,
 			service.New,
 		), // Pasamos las funciones que devuelven un struct
-		fx.Invoke(
-			func(ctx context.Context, serv service.Service) {
-				err := serv.RegisterUser(ctx, "my@email.com", "myname", "mypassword")
-				if err != nil {
-					panic(err)
-				}
-
-				user, err := serv.LoginUser(ctx, "my@email.com", "mypassword")
-				if err != nil {
-					panic(err)
-				}
-
-				if user.Name != "myname" {
-					panic("user name does not match")
-				}
-			},
-		),
+		fx.Invoke(),
 	)
 
 	app.Run()
