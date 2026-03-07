@@ -14,6 +14,24 @@ type MockService struct {
 	mock.Mock
 }
 
+// AddProdcut provides a mock function with given fields: ctx, product, userEmail
+func (_m *MockService) AddProdcut(ctx context.Context, product models.Product, userEmail string) error {
+	ret := _m.Called(ctx, product, userEmail)
+
+	if len(ret) == 0 {
+		panic("no return value specified for AddProdcut")
+	}
+
+	var r0 error
+	if rf, ok := ret.Get(0).(func(context.Context, models.Product, string) error); ok {
+		r0 = rf(ctx, product, userEmail)
+	} else {
+		r0 = ret.Error(0)
+	}
+
+	return r0
+}
+
 // AddUserRole provides a mock function with given fields: ctx, userID, roleID
 func (_m *MockService) AddUserRole(ctx context.Context, userID int64, roleID int64) error {
 	ret := _m.Called(ctx, userID, roleID)
@@ -30,6 +48,66 @@ func (_m *MockService) AddUserRole(ctx context.Context, userID int64, roleID int
 	}
 
 	return r0
+}
+
+// GetProductByID provides a mock function with given fields: ctx, id
+func (_m *MockService) GetProductByID(ctx context.Context, id int64) (*models.Product, error) {
+	ret := _m.Called(ctx, id)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetProductByID")
+	}
+
+	var r0 *models.Product
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context, int64) (*models.Product, error)); ok {
+		return rf(ctx, id)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context, int64) *models.Product); ok {
+		r0 = rf(ctx, id)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).(*models.Product)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context, int64) error); ok {
+		r1 = rf(ctx, id)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
+}
+
+// GetProducts provides a mock function with given fields: ctx
+func (_m *MockService) GetProducts(ctx context.Context) ([]models.Product, error) {
+	ret := _m.Called(ctx)
+
+	if len(ret) == 0 {
+		panic("no return value specified for GetProducts")
+	}
+
+	var r0 []models.Product
+	var r1 error
+	if rf, ok := ret.Get(0).(func(context.Context) ([]models.Product, error)); ok {
+		return rf(ctx)
+	}
+	if rf, ok := ret.Get(0).(func(context.Context) []models.Product); ok {
+		r0 = rf(ctx)
+	} else {
+		if ret.Get(0) != nil {
+			r0 = ret.Get(0).([]models.Product)
+		}
+	}
+
+	if rf, ok := ret.Get(1).(func(context.Context) error); ok {
+		r1 = rf(ctx)
+	} else {
+		r1 = ret.Error(1)
+	}
+
+	return r0, r1
 }
 
 // LoginUser provides a mock function with given fields: ctx, email, password
