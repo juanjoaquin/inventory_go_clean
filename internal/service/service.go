@@ -15,6 +15,10 @@ type Service interface {
 	LoginUser(ctx context.Context, email, password string) (*models.User, error) // Pedimos el Modelo. Porque aqui necesito retornar el modelo del usuario sin saber el password.
 	AddUserRole(ctx context.Context, userID, roleID int64) error
 	RemoveUserRole(ctx context.Context, userID, roleID int64) error
+
+	GetProducts(ctx context.Context) ([]models.Product, error)
+	GetProductByID(ctx context.Context, id int64) (*models.Product, error)
+	AddProdcut(ctx context.Context, product models.Product, userEmail string) error
 }
 
 type serv struct {
