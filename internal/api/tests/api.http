@@ -1,0 +1,22 @@
+### Variables (ajusta si usas otro host/puerto)
+@baseUrl = http://localhost:8080
+
+### Registrar usuario
+POST {{baseUrl}}/users/register
+Content-Type: application/json
+
+{
+  "email": "john@example.com",
+  "name": "John Doe",
+  "password": "123456"
+}
+
+### Registrar otro usuario (ejemplo)
+# POST {{baseUrl}}/users/register
+# Content-Type: application/json
+#
+# {
+#   "email": "otro@example.com",
+#   "name": "Otro Usuario",
+#   "password": "otrapass456"
+# }
