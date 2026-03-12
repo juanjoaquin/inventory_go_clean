@@ -25,3 +25,17 @@ func SignedLoginToken(user *models.User) (string, error) {
 	return jwtString, nil
 
 }
+
+// Hacemos el parseo del JWT
+
+func ParseLoginJWT(value string) (jwt.MapClaims, error) {
+	token, err := jwt.Parse(value, func(token *jwt.Token) (interface{}, error) {
+		return []byte(key), nil // Las claims vienen de la funcion de arriba de NewWithClaims
+	})
+
+	if err != nil {
+		return nil, err
+	}
+
+	return token.Claims.(jwt.MapClaims), nil
+}

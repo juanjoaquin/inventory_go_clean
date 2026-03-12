@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"errors"
+	"log"
 
 	"github.com/juanjoaquin/inventory_go_clean/internal/models"
 )
@@ -64,7 +65,7 @@ func (s *serv) GetProductByID(ctx context.Context, id int64) (*models.Product, e
 
 }
 
-func (s *serv) AddProdcut(ctx context.Context, product models.Product, email string) error {
+func (s *serv) AddProduct(ctx context.Context, product models.Product, email string) error {
 
 	u, err := s.repo.GetUserByEmail(ctx, email)
 	if err != nil {
@@ -75,6 +76,9 @@ func (s *serv) AddProdcut(ctx context.Context, product models.Product, email str
 	if err != nil {
 		return err
 	}
+
+	log.Println("User ID:", u.ID)
+	log.Println("User roles:", roles)
 
 	userCanAdd := false
 

@@ -18,7 +18,7 @@ type Service interface {
 
 	GetProducts(ctx context.Context) ([]models.Product, error)
 	GetProductByID(ctx context.Context, id int64) (*models.Product, error)
-	AddProdcut(ctx context.Context, product models.Product, userEmail string) error
+	AddProduct(ctx context.Context, product models.Product, userEmail string) error
 }
 
 type serv struct {

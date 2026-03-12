@@ -6,6 +6,7 @@ import (
 
 	"github.com/juanjoaquin/inventory_go_clean/encryption"
 	"github.com/juanjoaquin/inventory_go_clean/internal/api/dtos"
+	"github.com/juanjoaquin/inventory_go_clean/internal/models"
 	"github.com/juanjoaquin/inventory_go_clean/internal/service"
 	"github.com/labstack/echo/v5"
 )
@@ -85,6 +86,7 @@ func (a *API) LoginUser(c *echo.Context) error {
 		Secure:   true,
 		SameSite: http.SameSiteNoneMode,
 		HttpOnly: true,
+		Path:     "/",
 	}
 
 	// Pasamos la cookie a la response
@@ -93,4 +95,58 @@ func (a *API) LoginUser(c *echo.Context) error {
 	//TODO: Retornar el token JWT
 
 	return c.JSON(http.StatusOK, map[string]string{"message": "User logged in successfully"})
+}
+
+func (a *API) AddProduct(c *echo.Context) error {
+	// TODO get auth token from cookie
+	cookie, err := c.Cookie("Authorization")
+	if err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusUnauthorized, responseMessage{Message: err.Error()})
+	}
+	// parsear el jwt token
+	claims, err := encryption.ParseLoginJWT(cookie.Value)
+	if err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusUnauthorized, responseMessage{Message: err.Error()})
+	}
+
+	// Le pasamos los claims a la variable email
+	email := claims["email"].(string)
+
+	ctx := c.Request().Context()
+	// get el payload de la request
+	params := dtos.AddProduct{}
+
+	err = c.Bind(&params)
+	if err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusBadRequest, responseMessage{Message: err.Error()})
+	}
+
+	err = a.dataValidator.Struct(params)
+	if err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusBadRequest, responseMessage{Message: err.Error()})
+	}
+
+	p := models.Product{
+		Name:        params.Name,
+		Description: params.Description,
+		Price:       float32(params.Price),
+	}
+
+	err = a.serv.AddProduct(ctx, p, email)
+
+	if err != nil {
+		log.Println(err)
+
+		if err == service.ErrInvalidPermissions {
+			return c.JSON(http.StatusForbidden, responseMessage{Message: err.Error()})
+		}
+
+		return c.JSON(http.StatusInternalServerError, responseMessage{Message: err.Error()})
+	}
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "Product added successfully"})
 }
