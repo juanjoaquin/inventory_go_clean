@@ -1,8 +1,10 @@
 package api
 
 import (
+	"log"
 	"net/http"
 
+	"github.com/juanjoaquin/inventory_go_clean/encryption"
 	"github.com/juanjoaquin/inventory_go_clean/internal/api/dtos"
 	"github.com/juanjoaquin/inventory_go_clean/internal/service"
 	"github.com/labstack/echo/v5"
@@ -42,4 +44,53 @@ func (a *API) RegisterUser(c *echo.Context) error { // c es el contexto de la re
 
 	// O podemos hacer un return de nil simplemente.
 	return c.JSON(http.StatusCreated, responseMessage{Message: "User created successfully"})
+}
+
+func (a *API) LoginUser(c *echo.Context) error {
+
+	// LLamamos a los parametros de la request
+	ctx := c.Request().Context()
+	params := dtos.LoginUser{}
+
+	err := c.Bind(&params)
+	if err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusBadRequest, responseMessage{Message: err.Error()})
+	}
+	/* Validamos los parametros de la request */
+	err = a.dataValidator.Struct(params)
+	if err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusBadRequest, responseMessage{Message: err.Error()})
+	}
+
+	// Debemos buscar al User en nuestro Service
+	user, err := a.serv.LoginUser(ctx, params.Email, params.Password)
+	if err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusInternalServerError, responseMessage{Message: err.Error()})
+	}
+
+	//TODO: Crear el token JWT
+	token, err := encryption.SignedLoginToken(user)
+	if err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusInternalServerError, responseMessage{Message: err.Error()})
+	}
+
+	// Lo enviamos mediante cookies
+	cookie := &http.Cookie{
+		Name:     "Authorization",
+		Value:    token,
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
+		HttpOnly: true,
+	}
+
+	// Pasamos la cookie a la response
+	c.SetCookie(cookie)
+
+	//TODO: Retornar el token JWT
+
+	return c.JSON(http.StatusOK, map[string]string{"message": "User logged in successfully"})
 }
