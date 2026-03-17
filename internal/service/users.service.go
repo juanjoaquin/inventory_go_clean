@@ -70,6 +70,18 @@ func (s *serv) LoginUser(ctx context.Context, email, password string) (*models.U
 
 }
 
+func (s *serv) GetUserByEmail(ctx context.Context, email string) (*models.User, error) {
+	user, err := s.repo.GetUserByEmail(ctx, email)
+	if err != nil || user == nil {
+		return nil, ErrUserNotFound
+	}
+	return &models.User{
+		ID:    user.ID,
+		Email: user.Email,
+		Name:  user.Name,
+	}, nil
+}
+
 func (s *serv) AddUserRole(ctx context.Context, userID, roleID int64) error {
 
 	roles, err := s.repo.GetUserRoles(ctx, userID) // Chechekeamos si el usuario ya tiene un rol.

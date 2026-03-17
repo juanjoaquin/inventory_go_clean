@@ -10,7 +10,8 @@ func (a *API) RegisterRoutes(e *echo.Echo) {
 	users := e.Group("/users")
 
 	users.POST("/register", a.RegisterUser) /* /users/register */
-	users.POST("/login", a.LoginUser)       /* /users/login */
+	users.POST("/login", a.LoginUser)        /* /users/login */
+	users.GET("/me", a.Me)                  /* /users/me */
 
 	/* Creamos un grupo de rutas para los productos */
 	products := e.Group("/products")

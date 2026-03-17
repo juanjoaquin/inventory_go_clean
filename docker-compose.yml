@@ -12,14 +12,22 @@ services:
       MYSQL_DATABASE: inventory_go_clean
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   api:
     build: .
     container_name: inventory-api
     ports:
       - "8080:8080"
+    environment:
+      DB_HOST: mysql
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
 
 volumes:
   mysql_data:

@@ -1,8 +1,10 @@
 package api
 
 import (
+	"errors"
 	"log"
 	"net/http"
+	"strings"
 
 	"github.com/juanjoaquin/inventory_go_clean/encryption"
 	"github.com/juanjoaquin/inventory_go_clean/internal/api/dtos"
@@ -13,6 +15,20 @@ import (
 
 type responseMessage struct {
 	Message string `json:"message"`
+}
+
+const bearerPrefix = "Bearer "
+
+func getTokenFromRequest(c *echo.Context) (string, error) {
+	auth := c.Request().Header.Get("Authorization")
+	if strings.HasPrefix(auth, bearerPrefix) {
+		return strings.TrimSpace(auth[len(bearerPrefix):]), nil
+	}
+	cookie, err := c.Cookie("Authorization")
+	if err == nil && cookie.Value != "" {
+		return cookie.Value, nil
+	}
+	return "", errors.New("no token")
 }
 
 func (a *API) RegisterUser(c *echo.Context) error { // c es el contexto de la request
@@ -79,41 +95,55 @@ func (a *API) LoginUser(c *echo.Context) error {
 		return c.JSON(http.StatusInternalServerError, responseMessage{Message: err.Error()})
 	}
 
-	// Lo enviamos mediante cookies
-	cookie := &http.Cookie{
-		Name:     "Authorization",
-		Value:    token,
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
-		HttpOnly: true,
-		Path:     "/",
+	return c.JSON(http.StatusOK, dtos.LoginResponse{
+		Message:      "User logged in successfully",
+		AccessToken:  token,
+		RefreshToken: "", // implementar cuando exista endpoint de refresh
+	})
+}
+
+func (a *API) Me(c *echo.Context) error {
+	token, err := getTokenFromRequest(c)
+	if err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusUnauthorized, responseMessage{Message: "unauthorized"})
 	}
-
-	// Pasamos la cookie a la response
-	c.SetCookie(cookie)
-
-	//TODO: Retornar el token JWT
-
-	return c.JSON(http.StatusOK, map[string]string{"message": "User logged in successfully"})
+	claims, err := encryption.ParseLoginJWT(token)
+	if err != nil {
+		log.Println(err)
+		return c.JSON(http.StatusUnauthorized, responseMessage{Message: "unauthorized"})
+	}
+	email, ok := claims["email"].(string)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, responseMessage{Message: "unauthorized"})
+	}
+	ctx := c.Request().Context()
+	user, err := a.serv.GetUserByEmail(ctx, email)
+	if err != nil {
+		if err == service.ErrUserNotFound {
+			return c.JSON(http.StatusNotFound, responseMessage{Message: err.Error()})
+		}
+		log.Println(err)
+		return c.JSON(http.StatusInternalServerError, responseMessage{Message: err.Error()})
+	}
+	return c.JSON(http.StatusOK, user)
 }
 
 func (a *API) AddProduct(c *echo.Context) error {
-	// TODO get auth token from cookie
-	cookie, err := c.Cookie("Authorization")
+	token, err := getTokenFromRequest(c)
 	if err != nil {
 		log.Println(err)
-		return c.JSON(http.StatusUnauthorized, responseMessage{Message: err.Error()})
+		return c.JSON(http.StatusUnauthorized, responseMessage{Message: "unauthorized"})
 	}
-	// parsear el jwt token
-	claims, err := encryption.ParseLoginJWT(cookie.Value)
+	claims, err := encryption.ParseLoginJWT(token)
 	if err != nil {
 		log.Println(err)
-		return c.JSON(http.StatusUnauthorized, responseMessage{Message: err.Error()})
+		return c.JSON(http.StatusUnauthorized, responseMessage{Message: "unauthorized"})
 	}
-
-	// Le pasamos los claims a la variable email
-	email := claims["email"].(string)
-
+	email, ok := claims["email"].(string)
+	if !ok {
+		return c.JSON(http.StatusUnauthorized, responseMessage{Message: "unauthorized"})
+	}
 	ctx := c.Request().Context()
 	// get el payload de la request
 	params := dtos.AddProduct{}

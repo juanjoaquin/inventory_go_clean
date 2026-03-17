@@ -2,6 +2,7 @@ package settings
 
 import (
 	_ "embed"
+	"os"
 
 	"go.yaml.in/yaml/v3"
 )
@@ -32,6 +33,23 @@ func New() (*Settings, error) {
 
 	if err != nil {
 		return nil, err
+	}
+
+	// Variables de entorno para Docker (override del yaml)
+	if v := os.Getenv("DB_HOST"); v != "" {
+		s.DB.Host = v
+	}
+	if v := os.Getenv("DB_PORT"); v != "" {
+		s.DB.Port = v
+	}
+	if v := os.Getenv("DB_USER"); v != "" {
+		s.DB.User = v
+	}
+	if v := os.Getenv("DB_PASSWORD"); v != "" {
+		s.DB.Password = v
+	}
+	if v := os.Getenv("DB_NAME"); v != "" {
+		s.DB.Name = v
 	}
 
 	return &s, nil

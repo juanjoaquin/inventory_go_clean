@@ -13,6 +13,7 @@ import (
 type Service interface {
 	RegisterUser(ctx context.Context, email, name, password string) error
 	LoginUser(ctx context.Context, email, password string) (*models.User, error) // Pedimos el Modelo. Porque aqui necesito retornar el modelo del usuario sin saber el password.
+	GetUserByEmail(ctx context.Context, email string) (*models.User, error)
 	AddUserRole(ctx context.Context, userID, roleID int64) error
 	RemoveUserRole(ctx context.Context, userID, roleID int64) error
 
